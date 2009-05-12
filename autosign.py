@@ -1,4 +1,4 @@
-# autosign.py - automatically sign manifests upon commit
+# autosign.py - automatically sign changesets upon commit
 #
 # Copyright 2009 Matt Mackall <mpm@selenic.com> and others
 #
