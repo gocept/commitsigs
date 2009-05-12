@@ -1,13 +1,11 @@
 .. -*- rst -*-
 
-====================================
-Automatic signing of manifest hashes
-====================================
+=====================================
+Automatic signing of changeset hashes
+=====================================
 
-This experimental extension will let you sign the manifest hash when
-you commit. This hash is computed over all files in the repository and
-their history, but excludes the changelog meta data. A future version
-of the extension will sign the changelog data as well.
+This experimental extension will let you sign the changeset hash when
+you commit.
 
 It currently uses uses GnuPG_, but it should be easy to extend it to
 use other programs in the future.

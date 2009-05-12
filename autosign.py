@@ -5,17 +5,13 @@
 # This software may be used and distributed according to the terms of the
 # GNU General Public License version 2, incorporated herein by reference.
 
-"""automatically sign manifests upon commit
+"""automatically sign changesets upon commit
 
-This extension will use GnuPG to sign the manifest hash upon each
-commit. The manifest hash is a cryptographic digest of the files in
-the repository and their history.
+This extension will use GnuPG to sign the changeset hash upon each
+commit and embed the signature directly in the changelog.
 
-The signature is embedded in the changelog. Use 'hg log --debug' to
-see the extra meta data for each changeset, including the signature.
-Since the signature is embedded in the changelog, the changelog
-information itself is *not* signed. This means that it is possible to
-switch commit messages without this being detected by this extension.
+Use 'hg log --debug' to see the extra meta data for each changeset,
+including the signature.
 """
 
 import os, tempfile, subprocess, binascii
