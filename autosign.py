@@ -21,11 +21,13 @@ from mercurial import (util, cmdutil, extensions, revlog, error,
 from mercurial.node import short, hex, nullid
 from mercurial.i18n import _
 
+
 def sign(msg):
     p = subprocess.Popen(["gpg", "--detach-sign"],
                          stdin=subprocess.PIPE, stdout=subprocess.PIPE)
     sig = p.communicate(msg)[0]
     return binascii.b2a_base64(sig).strip()
+
 
 def verify(msg, sig, quiet=False):
     sig = binascii.a2b_base64(sig)
@@ -48,11 +50,13 @@ def verify(msg, sig, quiet=False):
         except OSError:
             pass
 
+
 # Borrowed from changelog.changelog.encode_extra.
 def encode_extra(d):
     # keys must be sorted to produce a deterministic changelog entry
     items = [changelog._string_escape('%s:%s' % (k, d[k])) for k in sorted(d)]
     return "\0".join(items)
+
 
 def chash(manifest, files, desc, p1, p2, user, date, extra):
     """Compute changeset hash from the changeset pieces."""
@@ -78,12 +82,14 @@ def chash(manifest, files, desc, p1, p2, user, date, extra):
     text = "\n".join(l)
     return revlog.hash(text, p1, p2)
 
+
 def ctxhash(ctx):
     """Compute changeset hash from a ``changectx``."""
     manifest, user, date, files, desc, extra = ctx.changeset()
     p1, p2 = ([p.node() for p in ctx.parents()] + [nullid, nullid])[:2]
     date = (int(date[0]), date[1])
     return chash(manifest, files, desc, p1, p2, user, date, extra)
+
 
 def checksigs(ui, repo, *revrange):
     """check manifest signatures
@@ -110,7 +116,7 @@ def checksigs(ui, repo, *revrange):
         extra = ctx.extra()
         sig = extra.get('signature')
         if not sig:
-            msg =_("** no signature")
+            msg = _("** no signature")
             retcode = max(retcode, 1)
         else:
             ui.debug(_("signature: %s\n") % sig)
@@ -126,6 +132,7 @@ def checksigs(ui, repo, *revrange):
         ui.write("%d:%s: %s\n" % (ctx.rev(), ctx, msg))
     return retcode
 
+
 def hook(ui, repo, node, **kwargs):
     """verify changeset signatures
 
@@ -136,6 +143,7 @@ def hook(ui, repo, node, **kwargs):
     ctx = repo[node]
     if checksigs(ui, repo, "%s:" % node) > 0:
         raise error.Abort(_("could not verify all changeset"))
+
 
 def extsetup():
 
