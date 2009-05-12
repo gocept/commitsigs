@@ -20,8 +20,8 @@ switch commit messages without this being detected by this extension.
 
 import os, tempfile, subprocess, binascii
 
-from mercurial import util, cmdutil, extensions
-from mercurial.node import short, hex
+from mercurial import util, cmdutil, extensions, revlog, error, encoding
+from mercurial.node import short, hex, nullid
 from mercurial.i18n import _
 
 def sign(msg):
@@ -51,6 +51,43 @@ def verify(msg, sig, quiet=False):
         except OSError:
             pass
 
+# Borrowed from changelog.changelog.encode_extra.
+def encode_extra(d):
+    # keys must be sorted to produce a deterministic changelog entry
+    items = [changelog._string_escape('%s:%s' % (k, d[k])) for k in sorted(d)]
+    return "\0".join(items)
+
+def chash(manifest, files, desc, p1, p2, user, date, extra):
+    """Compute changeset hash from the changeset pieces."""
+    user = user.strip()
+    if "\n" in user:
+        raise error.RevlogError(_("username %s contains a newline")
+                                % repr(user))
+    user, desc = encoding.fromlocal(user), encoding.fromlocal(desc)
+
+    if date:
+        parseddate = "%d %d" % util.parsedate(date)
+    else:
+        parseddate = "%d %d" % util.makedate()
+    extra = extra.copy()
+    if 'signature' in extra:
+        del extra['signature']
+    if extra.get("branch") in ("default", ""):
+        del extra["branch"]
+    if extra:
+        extra = self.encode_extra(extra)
+        parseddate = "%s %s" % (parseddate, extra)
+    l = [hex(manifest), user, parseddate] + sorted(files) + ["", desc]
+    text = "\n".join(l)
+    return revlog.hash(text, p1, p2)
+
+def ctxhash(ctx):
+    """Compute changeset hash from a ``changectx``."""
+    manifest, user, date, files, desc, extra = ctx.changeset()
+    p1, p2 = ([p.node() for p in ctx.parents()] + [nullid, nullid])[:2]
+    date = (int(date[0]), date[1])
+    return chash(manifest, files, desc, p1, p2, user, date, extra)
+
 def checksigs(ui, repo, *revrange):
     """check manifest signatures
 
@@ -72,7 +109,7 @@ def checksigs(ui, repo, *revrange):
     retcode = 0
     for rev in revs:
         ctx = repo[rev]
-        mn = ctx.changeset()[0]
+        h = ctxhash(ctx)
         extra = ctx.extra()
         sig = extra.get('signature')
         if not sig:
@@ -81,10 +118,10 @@ def checksigs(ui, repo, *revrange):
         else:
             ui.debug(_("signature: %s\n") % sig)
             try:
-                if verify(hex(mn), sig, quiet=True):
+                if verify(hex(h), sig, quiet=True):
                     msg = _("good signature")
                 else:
-                    msg = _("** bad signature on %s") % short(mn)
+                    msg = _("** bad signature on %s") % short(h)
                     retcode = max(retcode, 3)
             except Exception, e:
                 msg = _("** exception while verifying: %s") % e
@@ -106,13 +143,9 @@ def reposetup(ui, repo):
             # doing a commit in the repo.
 
             def add(orig, manifest, files, desc, transaction, p1=None, p2=None,
-                  user=None, date=None, extra={}):
-                # TODO: We could actually compute the changeset hash
-                # from the arguments to this function and sign that
-                # instead. It would only require stealing some more
-                # code from changelog.add... Signing the manifest will
-                # have to do for now.
-                extra['signature'] = sign(hex(manifest))
+                    user=None, date=None, extra={}):
+                h = chash(manifest, files, desc, p1, p2, user, date, extra)
+                extra['signature'] = sign(hex(h))
                 return orig(manifest, files, desc, transaction,
                             p1, p2, user, date, extra)
 
