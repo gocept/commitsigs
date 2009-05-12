@@ -16,7 +16,8 @@ including the signature.
 
 import os, tempfile, subprocess, binascii
 
-from mercurial import util, cmdutil, extensions, revlog, error, encoding
+from mercurial import (util, cmdutil, extensions, revlog, error,
+                       encoding, changelog)
 from mercurial.node import short, hex, nullid
 from mercurial.i18n import _
 
@@ -136,27 +137,16 @@ def hook(ui, repo, node, **kwargs):
     if checksigs(ui, repo, "%s:" % node) > 0:
         raise error.Abort(_("could not verify all changeset"))
 
-def reposetup(ui, repo):
+def extsetup():
 
-    class autosignrepo(repo.__class__):
+    def add(orig, self, manifest, files, desc, transaction,
+            p1=None, p2=None, user=None, date=None, extra={}):
+        h = chash(manifest, files, desc, p1, p2, user, date, extra)
+        extra['signature'] = sign(hex(h))
+        return orig(self, manifest, files, desc, transaction,
+                    p1, p2, user, date, extra)
 
-        def _commitctx(self, *args, **kwargs):
-            # Make changelog.add intercept the extra dictionary when
-            # doing a commit in the repo.
-
-            def add(orig, manifest, files, desc, transaction, p1=None, p2=None,
-                    user=None, date=None, extra={}):
-                h = chash(manifest, files, desc, p1, p2, user, date, extra)
-                extra['signature'] = sign(hex(h))
-                return orig(manifest, files, desc, transaction,
-                            p1, p2, user, date, extra)
-
-            old_add = extensions.wrapfunction(self.changelog, 'add', add)
-            n = super(autosignrepo, self)._commitctx(*args, **kwargs)
-            self.changelog.add = old_add
-            return n
-
-    repo.__class__ = autosignrepo
+    extensions.wrapfunction(changelog.changelog, 'add', add)
 
 cmdtable = {
     "checksigs": (checksigs, [], "[REV...]")
