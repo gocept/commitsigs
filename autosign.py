@@ -127,8 +127,8 @@ def checksigs(ui, repo, *revrange):
 
 def hook(ui, repo, node, **kwargs):
     ctx = repo[node]
-    for rev in range(ctx.rev(), len(repo)):
-        checksig(ui, repo, rev)
+    if checksigs(ui, repo, "%s:" % node) > 0:
+        raise error.Abort(_("could not verify all changeset"))
 
 def reposetup(ui, repo):
 
