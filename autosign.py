@@ -126,6 +126,12 @@ def checksigs(ui, repo, *revrange):
     return retcode
 
 def hook(ui, repo, node, **kwargs):
+    """verify changeset signatures
+
+    This hook is suitable for use as a ``pretxnchangegroup`` hook. It
+    will verify that all pushed changesets carry a good signature. If
+    one or more changesets lack a good signature, the push is aborted.
+    """
     ctx = repo[node]
     if checksigs(ui, repo, "%s:" % node) > 0:
         raise error.Abort(_("could not verify all changeset"))
