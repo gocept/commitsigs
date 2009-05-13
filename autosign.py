@@ -105,7 +105,7 @@ def checksigs(ui, repo, *revrange):
     The final return code is the highest of the above.
     """
     if not revrange:
-        revs = xrange(1, len(repo))
+        revs = xrange(len(repo))
     else:
         revs = cmdutil.revrange(repo, revrange)
 
