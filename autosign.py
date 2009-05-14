@@ -14,7 +14,7 @@ Use 'hg log --debug' to see the extra meta data for each changeset,
 including the signature.
 """
 
-import os, tempfile, subprocess, binascii
+import os, tempfile, subprocess, binascii, shlex
 
 from mercurial import (util, cmdutil, extensions, revlog, error,
                        encoding, changelog)
@@ -22,9 +22,12 @@ from mercurial.node import short, hex, nullid
 from mercurial.i18n import _
 
 
+CONFIG = {'gpg.path': 'gpg', 'gpg.flags': []}
+
+
 def sign(msg):
-    p = subprocess.Popen(["gpg", "--detach-sign"],
-                         stdin=subprocess.PIPE, stdout=subprocess.PIPE)
+    cmd = [CONFIG["gpg.path"], "--detach-sign"] + CONFIG["gpg.flags"]
+    p = subprocess.Popen(cmd, stdin=subprocess.PIPE, stdout=subprocess.PIPE)
     sig = p.communicate(msg)[0]
     return binascii.b2a_base64(sig).strip()
 
@@ -38,10 +41,10 @@ def verify(msg, sig, quiet=False):
         fp.close()
         stderr = quiet and subprocess.PIPE or None
 
-        p = subprocess.Popen(["gpg", "--status-fd", "1", "--verify",
-                              filename, '-'],
-                             stdin=subprocess.PIPE, stdout=subprocess.PIPE,
-                             stderr=stderr)
+        cmd = [CONFIG["gpg.path"]] + CONFIG["gpg.flags"] + \
+            ["--status-fd", "1", "--verify", filename, '-']
+        p = subprocess.Popen(cmd, stdin=subprocess.PIPE,
+                             stdout=subprocess.PIPE, stderr=stderr)
         out, err = p.communicate(msg)
         return 'GOODSIG' in out
     finally:
@@ -144,6 +147,15 @@ def hook(ui, repo, node, **kwargs):
     if verifysigs(ui, repo, "%s:" % node) > 0:
         raise error.Abort(_("could not verify all changeset"))
 
+
+def uisetup(ui):
+    for key in CONFIG:
+        val = CONFIG[key]
+        uival = ui.config('autosign', key, val)
+        if isinstance(val, list) and not isinstance(uival, list):
+            CONFIG[key] = shlex.split(uival)
+        else:
+            CONFIG[key] = uival
 
 def extsetup():
 
