@@ -91,15 +91,15 @@ def ctxhash(ctx):
     return chash(manifest, files, desc, p1, p2, user, date, extra)
 
 
-def checksigs(ui, repo, *revrange):
-    """check manifest signatures
+def verifysigs(ui, repo, *revrange):
+    """verify manifest signatures
 
-    Check the revision range specified or all changesets. The return
+    Verify the revision range specified or all changesets. The return
     code is one of:
 
     - 0 if all changesets had valid signatures
     - 1 if there were a changeset without a signature
-    - 2 if an exception was raised while checking a changeset
+    - 2 if an exception was raised while verifying a changeset
     - 3 if there were a changeset with a bad signature
 
     The final return code is the highest of the above.
@@ -141,7 +141,7 @@ def hook(ui, repo, node, **kwargs):
     one or more changesets lack a good signature, the push is aborted.
     """
     ctx = repo[node]
-    if checksigs(ui, repo, "%s:" % node) > 0:
+    if verifysigs(ui, repo, "%s:" % node) > 0:
         raise error.Abort(_("could not verify all changeset"))
 
 
@@ -157,5 +157,5 @@ def extsetup():
     extensions.wrapfunction(changelog.changelog, 'add', add)
 
 cmdtable = {
-    "checksigs": (checksigs, [], "[REV...]")
+    "verifysigs": (verifysigs, [], "[REV...]")
 }
