@@ -1,11 +1,11 @@
-# autosign.py - automatically sign changesets upon commit
+# commitsigs.py - sign changesets upon commit
 #
 # Copyright 2009 Matt Mackall <mpm@selenic.com> and others
 #
 # This software may be used and distributed according to the terms of the
 # GNU General Public License version 2, incorporated herein by reference.
 
-"""automatically sign changesets upon commit
+"""sign changesets upon commit
 
 This extension will use GnuPG to sign the changeset hash upon each
 commit and embed the signature directly in the changelog.
@@ -151,7 +151,7 @@ def hook(ui, repo, node, **kwargs):
 def uisetup(ui):
     for key in CONFIG:
         val = CONFIG[key]
-        uival = ui.config('autosign', key, val)
+        uival = ui.config('commitsigs', key, val)
         if isinstance(val, list) and not isinstance(uival, list):
             CONFIG[key] = shlex.split(uival)
         else:

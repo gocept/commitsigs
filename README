@@ -10,6 +10,6 @@ you commit.
 It currently uses uses GnuPG_, but it should be easy to extend it to
 use other programs in the future.
 
-Activate it and see ``hg help autosign`` for more information.
+Activate it and see ``hg help commitsigs`` for more information.
 
 .. _GnuPG: http://gnupg.org/
