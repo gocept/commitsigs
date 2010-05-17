@@ -54,13 +54,6 @@ def verify(msg, sig, quiet=False):
             pass
 
 
-# Borrowed from changelog.changelog.encode_extra.
-def encode_extra(d):
-    # keys must be sorted to produce a deterministic changelog entry
-    items = [changelog._string_escape('%s:%s' % (k, d[k])) for k in sorted(d)]
-    return "\0".join(items)
-
-
 def chash(manifest, files, desc, p1, p2, user, date, extra):
     """Compute changeset hash from the changeset pieces."""
     user = user.strip()
@@ -79,7 +72,7 @@ def chash(manifest, files, desc, p1, p2, user, date, extra):
     if extra.get("branch") in ("default", ""):
         del extra["branch"]
     if extra:
-        extra = encode_extra(extra)
+        extra = changelog.encodeextra(extra)
         parseddate = "%s %s" % (parseddate, extra)
     l = [hex(manifest), user, parseddate] + sorted(files) + ["", desc]
     text = "\n".join(l)
