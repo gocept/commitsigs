@@ -79,7 +79,7 @@ def chash(manifest, files, desc, p1, p2, user, date, extra):
     if extra.get("branch") in ("default", ""):
         del extra["branch"]
     if extra:
-        extra = self.encode_extra(extra)
+        extra = encode_extra(extra)
         parseddate = "%s %s" % (parseddate, extra)
     l = [hex(manifest), user, parseddate] + sorted(files) + ["", desc]
     text = "\n".join(l)
