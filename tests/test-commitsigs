@@ -1,0 +1,23 @@
+#!/bin/sh
+
+"$TESTDIR/hghave" gpg || exit 80
+
+cat >> $HGRCPATH <<EOF
+[extensions]
+commitsigs = $TESTDIR/../commitsigs.py
+
+[commitsigs]
+gpg.flags = --no-permission-warning --no-secmem-warning --homedir $TESTDIR/gpg
+
+EOF
+
+echo % commitsigs test
+hg init
+echo "Hello" > a.txt
+hg add
+hg commit -m First -d '1000 0'
+
+echo "World" >> a.txt
+hg commit -m Second -d '2000 0'
+
+hg verifysigs | sed 's|:[0-9a-f]\+:|:XXXXXXXXXXXX:|'
