@@ -12,4 +12,6 @@ use other programs in the future.
 
 Activate it and see ``hg help commitsigs`` for more information.
 
+Works with Mercurial version 1.3 or later.
+
 .. _GnuPG: http://gnupg.org/
