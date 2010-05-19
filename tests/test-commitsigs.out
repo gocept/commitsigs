@@ -1,4 +1,8 @@
-% commitsigs test
+% Testing with GnuPG
+adding a.txt
+0:XXXXXXXXXXXX: good signature
+1:XXXXXXXXXXXX: good signature
+% Testing with OpenSSL
 adding a.txt
 0:XXXXXXXXXXXX: good signature
 1:XXXXXXXXXXXX: good signature
