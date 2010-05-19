@@ -22,3 +22,13 @@ echo "World" >> a.txt
 hg commit -m Second -d '2000 0'
 
 hg verifysigs | sed 's|:[0-9a-f]\+:|:XXXXXXXXXXXX:|'
+
+cat >> $HGRCPATH <<EOF
+[commitsigs]
+scheme = x
+EOF
+
+echo "% unknown scheme"
+hg status
+
+true
