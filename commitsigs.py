@@ -29,14 +29,14 @@ CONFIG = {
     }
 
 
-def sign(msg):
+def gnupgsign(msg):
     cmd = [CONFIG["gnupg.path"], "--detach-sign"] + CONFIG["gnupg.flags"]
     p = subprocess.Popen(cmd, stdin=subprocess.PIPE, stdout=subprocess.PIPE)
     sig = p.communicate(msg)[0]
     return binascii.b2a_base64(sig).strip()
 
 
-def verify(msg, sig, quiet=False):
+def gnupgverify(msg, sig, quiet=False):
     sig = binascii.a2b_base64(sig)
     try:
         fd, filename = tempfile.mkstemp(prefix="hg-", suffix=".sig")
@@ -146,7 +146,7 @@ def hook(ui, repo, node, **kwargs):
     if verifysigs(ui, repo, "%s:" % node) > 0:
         raise error.Abort(_("could not verify all changeset"))
 
-sigschemes = {'gnupg': (sign, verify)}
+sigschemes = {'gnupg': (gnupgsign, gnupgverify)}
 
 def uisetup(ui):
     for key in CONFIG:
