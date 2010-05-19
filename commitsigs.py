@@ -141,8 +141,6 @@ def verifysigs(ui, repo, *revrange):
     else:
         revs = cmdutil.revrange(repo, revrange)
 
-    verifyfunc = sigschemes[CONFIG['scheme']][1]
-
     retcode = 0
     for rev in revs:
         ctx = repo[rev]
@@ -155,6 +153,8 @@ def verifysigs(ui, repo, *revrange):
         else:
             ui.debug(_("signature: %s\n") % sig)
             try:
+                scheme, sig = sig.split(":", 1)
+                verifyfunc = sigschemes[scheme][1]
                 if verifyfunc(hex(h), sig, quiet=True):
                     msg = _("good signature")
                 else:
@@ -198,8 +198,9 @@ def extsetup():
     def add(orig, self, manifest, files, desc, transaction,
             p1=None, p2=None, user=None, date=None, extra={}):
         h = chash(manifest, files, desc, p1, p2, user, date, extra)
-        signfunc = sigschemes[CONFIG['scheme']][0]
-        extra['signature'] = signfunc(hex(h))
+        scheme = CONFIG['scheme']
+        signfunc = sigschemes[scheme][0]
+        extra['signature'] = "%s:%s" % (scheme, signfunc(hex(h)))
         return orig(self, manifest, files, desc, transaction,
                     p1, p2, user, date, extra)
 
