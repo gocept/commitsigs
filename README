@@ -5,13 +5,15 @@ Automatic signing of changeset hashes
 =====================================
 
 This experimental extension will let you sign the changeset hash when
-you commit.
+you commit. The signature is embedded directly in the changeset
+itself; there wont be any extra commits.
 
-It currently uses uses GnuPG_, but it should be easy to extend it to
-use other programs in the future.
+It currently uses uses GnuPG_ and OpenSSL_, but it should be easy to
+extend it to use other programs in the future.
 
 Activate it and see ``hg help commitsigs`` for more information.
 
 Works with Mercurial version 1.3 or later.
 
 .. _GnuPG: http://gnupg.org/
+.. _OpenSSL: http://openssl.org/
