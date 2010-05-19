@@ -1,6 +1,6 @@
 #!/bin/sh
 
-"$TESTDIR/hghave" gpg || exit 80
+"$TESTDIR/hghave" gpg openssl || exit 80
 
 cat >> $HGRCPATH <<EOF
 [extensions]
