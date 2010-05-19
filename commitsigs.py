@@ -22,11 +22,11 @@ from mercurial.node import short, hex, nullid
 from mercurial.i18n import _
 
 
-CONFIG = {'gpg.path': 'gpg', 'gpg.flags': []}
+CONFIG = {'gnupg.path': 'gpg', 'gnupg.flags': []}
 
 
 def sign(msg):
-    cmd = [CONFIG["gpg.path"], "--detach-sign"] + CONFIG["gpg.flags"]
+    cmd = [CONFIG["gnupg.path"], "--detach-sign"] + CONFIG["gnupg.flags"]
     p = subprocess.Popen(cmd, stdin=subprocess.PIPE, stdout=subprocess.PIPE)
     sig = p.communicate(msg)[0]
     return binascii.b2a_base64(sig).strip()
@@ -41,7 +41,7 @@ def verify(msg, sig, quiet=False):
         fp.close()
         stderr = quiet and subprocess.PIPE or None
 
-        cmd = [CONFIG["gpg.path"]] + CONFIG["gpg.flags"] + \
+        cmd = [CONFIG["gnupg.path"]] + CONFIG["gnupg.flags"] + \
             ["--status-fd", "1", "--verify", filename, '-']
         p = subprocess.Popen(cmd, stdin=subprocess.PIPE,
                              stdout=subprocess.PIPE, stderr=stderr)
