@@ -25,7 +25,10 @@ from mercurial.i18n import _
 CONFIG = {
     'scheme': 'gnupg',
     'gnupg.path': 'gpg',
-    'gnupg.flags': []
+    'gnupg.flags': [],
+    'openssl.path': 'openssl',
+    'openssl.pubkey': '',
+    'openssl.seckey': ''
     }
 
 
@@ -51,6 +54,35 @@ def gnupgverify(msg, sig, quiet=False):
                              stdout=subprocess.PIPE, stderr=stderr)
         out, err = p.communicate(msg)
         return 'GOODSIG' in out
+    finally:
+        try:
+            os.unlink(filename)
+        except OSError:
+            pass
+
+
+def opensslsign(msg):
+    cmd = [CONFIG["openssl.path"], "dgst", "-sign", CONFIG["openssl.seckey"]]
+    p = subprocess.Popen(cmd, stdin=subprocess.PIPE, stdout=subprocess.PIPE)
+    sig = p.communicate(msg)[0]
+    return binascii.b2a_base64(sig).strip()
+
+
+def opensslverify(msg, sig, quiet=False):
+    sig = binascii.a2b_base64(sig)
+    try:
+        fd, filename = tempfile.mkstemp(prefix="hg-", suffix=".sig")
+        fp = os.fdopen(fd, 'wb')
+        fp.write(sig)
+        fp.close()
+        stderr = quiet and subprocess.PIPE or None
+
+        cmd = [CONFIG["openssl.path"], "dgst",
+               "-verify", CONFIG["openssl.pubkey"], "-signature", filename]
+        p = subprocess.Popen(cmd, stdin=subprocess.PIPE,
+                             stdout=subprocess.PIPE, stderr=stderr)
+        out, err = p.communicate(msg)
+        return out.strip() == "Verified OK"
     finally:
         try:
             os.unlink(filename)
@@ -146,7 +178,8 @@ def hook(ui, repo, node, **kwargs):
     if verifysigs(ui, repo, "%s:" % node) > 0:
         raise error.Abort(_("could not verify all changeset"))
 
-sigschemes = {'gnupg': (gnupgsign, gnupgverify)}
+sigschemes = {'gnupg': (gnupgsign, gnupgverify),
+              'openssl': (opensslsign, opensslverify)}
 
 def uisetup(ui):
     for key in CONFIG:
