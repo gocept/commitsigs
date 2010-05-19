@@ -156,12 +156,13 @@ def verifysigs(ui, repo, *revrange):
                 scheme, sig = sig.split(":", 1)
                 verifyfunc = sigschemes[scheme][1]
                 if verifyfunc(hex(h), sig, quiet=True):
-                    msg = _("good signature")
+                    msg = _("good %s signature") % scheme
                 else:
-                    msg = _("** bad signature on %s") % short(h)
+                    msg = _("** bad %s signature on %s") % (scheme, short(h))
                     retcode = max(retcode, 3)
             except Exception, e:
-                msg = _("** exception while verifying: %s") % e
+                msg = _("** exception while verifying %s signature: %s") \
+                    % (scheme, e)
                 retcode = max(retcode, 2)
         ui.write("%d:%s: %s\n" % (ctx.rev(), ctx, msg))
     return retcode
