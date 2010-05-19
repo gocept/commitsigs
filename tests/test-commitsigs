@@ -2,6 +2,12 @@
 
 "$TESTDIR/hghave" gpg openssl || exit 80
 
+hg init
+echo "Hello" > a.txt
+hg add a.txt
+echo "% Commit with no signature"
+hg commit -m "Unsigned" -d '1000 0'
+
 cat >> $HGRCPATH <<EOF
 [extensions]
 commitsigs = $TESTDIR/../commitsigs.py
@@ -12,24 +18,9 @@ gnupg.flags = --no-permission-warning --no-secmem-warning \
 
 EOF
 
-echo '% Testing with GnuPG'
-hg init gnupg
-cd gnupg
-echo "Hello" > a.txt
-hg add
-hg commit -m First -d '1000 0'
-
 echo "World" >> a.txt
-hg commit -m Second -d '2000 0'
-
-hg verifysigs | sed 's|:[0-9a-f]\+:|:XXXXXXXXXXXX:|'
-
-
-cd ..
-
-echo '% Testing with OpenSSL'
-hg init openssl
-cd openssl
+echo "% Commit with GnuPG signature"
+hg commit -m "GnuPG" -d '2000 0'
 
 cat >> $HGRCPATH <<EOF
 [commitsigs]
@@ -38,15 +29,11 @@ openssl.pubkey = $TESTDIR/openssl/pub.pem
 openssl.seckey = $TESTDIR/openssl/sec.pem
 EOF
 
-echo "Hello" > a.txt
-hg add
-hg commit -m First -d '1000 0'
-
-echo "World" >> a.txt
-hg commit -m Second -d '2000 0'
+echo "!" >> a.txt
+echo "% Commit with OpenSSL signature"
+hg commit -m "OpenSSL" -d '3000 0'
 
 hg verifysigs | sed 's|:[0-9a-f]\+:|:XXXXXXXXXXXX:|'
-
 
 cat >> $HGRCPATH <<EOF
 [commitsigs]

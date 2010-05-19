@@ -1,10 +1,8 @@
-% Testing with GnuPG
-adding a.txt
-0:XXXXXXXXXXXX: good signature
+% Commit with no signature
+% Commit with GnuPG signature
+% Commit with OpenSSL signature
+0:XXXXXXXXXXXX: ** no signature
 1:XXXXXXXXXXXX: good signature
-% Testing with OpenSSL
-adding a.txt
-0:XXXXXXXXXXXX: good signature
-1:XXXXXXXXXXXX: good signature
+2:XXXXXXXXXXXX: good signature
 % unknown scheme
 abort: unknown signature scheme: x
