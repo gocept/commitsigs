@@ -22,7 +22,11 @@ from mercurial.node import short, hex, nullid
 from mercurial.i18n import _
 
 
-CONFIG = {'gnupg.path': 'gpg', 'gnupg.flags': []}
+CONFIG = {
+    'scheme': 'gnupg',
+    'gnupg.path': 'gpg',
+    'gnupg.flags': []
+    }
 
 
 def sign(msg):
@@ -105,6 +109,8 @@ def verifysigs(ui, repo, *revrange):
     else:
         revs = cmdutil.revrange(repo, revrange)
 
+    verifyfunc = sigschemes[CONFIG['scheme']][1]
+
     retcode = 0
     for rev in revs:
         ctx = repo[rev]
@@ -117,7 +123,7 @@ def verifysigs(ui, repo, *revrange):
         else:
             ui.debug(_("signature: %s\n") % sig)
             try:
-                if verify(hex(h), sig, quiet=True):
+                if verifyfunc(hex(h), sig, quiet=True):
                     msg = _("good signature")
                 else:
                     msg = _("** bad signature on %s") % short(h)
@@ -140,6 +146,7 @@ def hook(ui, repo, node, **kwargs):
     if verifysigs(ui, repo, "%s:" % node) > 0:
         raise error.Abort(_("could not verify all changeset"))
 
+sigschemes = {'gnupg': (sign, verify)}
 
 def uisetup(ui):
     for key in CONFIG:
@@ -149,13 +156,17 @@ def uisetup(ui):
             CONFIG[key] = shlex.split(uival)
         else:
             CONFIG[key] = uival
+    if CONFIG['scheme'] not in sigschemes:
+        raise util.Abort(_("unknown signature scheme: %s")
+                         % CONFIG['scheme'])
 
 def extsetup():
 
     def add(orig, self, manifest, files, desc, transaction,
             p1=None, p2=None, user=None, date=None, extra={}):
         h = chash(manifest, files, desc, p1, p2, user, date, extra)
-        extra['signature'] = sign(hex(h))
+        signfunc = sigschemes[CONFIG['scheme']][0]
+        extra['signature'] = signfunc(hex(h))
         return orig(self, manifest, files, desc, transaction,
                     p1, p2, user, date, extra)
 
