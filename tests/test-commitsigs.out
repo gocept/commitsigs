@@ -1,5 +1,10 @@
 % Commit with no signature
+% hg verifysigs (exit code: 1)
+0:XXXXXXXXXXXX: ** no signature
 % Commit with GnuPG signature
+% hg verifysigs (exit code: 1)
+0:XXXXXXXXXXXX: ** no signature
+1:XXXXXXXXXXXX: good gnupg signature
 % Commit with OpenSSL signature
 % hg verifysigs (exit code: 1)
 0:XXXXXXXXXXXX: ** no signature

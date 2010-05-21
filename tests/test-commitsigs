@@ -2,6 +2,13 @@
 
 "$TESTDIR/hghave" gpg openssl || exit 80
 
+hgverifysigs () {
+    hg verifysigs > output
+    echo "% hg verifysigs (exit code: $?)"
+    sed 's|:[0-9a-f]\+:|:XXXXXXXXXXXX:|' < output
+    rm output
+}
+
 hg init
 echo "Hello" > a.txt
 hg add a.txt
@@ -18,9 +25,12 @@ gnupg.flags = --no-permission-warning --no-secmem-warning \
 
 EOF
 
+hgverifysigs
+
 echo "World" >> a.txt
 echo "% Commit with GnuPG signature"
 hg commit -m "GnuPG" -d '2000 0'
+hgverifysigs
 
 cat >> $HGRCPATH <<EOF
 [commitsigs]
@@ -33,9 +43,7 @@ echo "!" >> a.txt
 echo "% Commit with OpenSSL signature"
 hg commit -m "OpenSSL" -d '3000 0'
 
-hg verifysigs > output
-echo "% hg verifysigs (exit code: $?)"
-sed 's|:[0-9a-f]\+:|:XXXXXXXXXXXX:|' < output
+hgverifysigs
 
 cat >> $HGRCPATH <<EOF
 [commitsigs]
