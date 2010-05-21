@@ -33,7 +33,9 @@ echo "!" >> a.txt
 echo "% Commit with OpenSSL signature"
 hg commit -m "OpenSSL" -d '3000 0'
 
-hg verifysigs | sed 's|:[0-9a-f]\+:|:XXXXXXXXXXXX:|'
+hg verifysigs > output
+echo "% hg verifysigs (exit code: $?)"
+sed 's|:[0-9a-f]\+:|:XXXXXXXXXXXX:|' < output
 
 cat >> $HGRCPATH <<EOF
 [commitsigs]
