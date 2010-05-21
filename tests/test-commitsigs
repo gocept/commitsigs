@@ -25,8 +25,8 @@ hg commit -m "GnuPG" -d '2000 0'
 cat >> $HGRCPATH <<EOF
 [commitsigs]
 scheme = openssl
-openssl.pubkey = $TESTDIR/openssl/pub.pem
-openssl.seckey = $TESTDIR/openssl/sec.pem
+openssl.pubkey = $TESTDIR/openssl/alice.pub.pem
+openssl.seckey = $TESTDIR/openssl/alice.sec.pem
 EOF
 
 echo "!" >> a.txt
