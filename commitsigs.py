@@ -7,11 +7,39 @@
 
 """sign changesets upon commit
 
-This extension will use GnuPG to sign the changeset hash upon each
-commit and embed the signature directly in the changelog.
+This extension will use GnuPG or OpenSSL to sign the changeset hash
+upon each commit and embed the signature directly in the changelog.
 
 Use 'hg log --debug' to see the extra meta data for each changeset,
 including the signature.
+
+You must first select the desired signature scheme::
+
+  [commitsigs]
+  scheme = gnupg
+
+The two recognized schemes are ``gnupg`` (the default) and
+``openssl``. If you use ``gnupg``, then you normally wont have to
+configure other options. However, if ``gpg`` is not in your path or if
+you have multiple private keys, then you may want to set the following
+options::
+
+  [commitsigs]
+  gnupg.path = mygpg
+  gnupg.flags = --local-user me
+
+The ``openssl`` scheme requires a little more configuration. You need
+to specify the path to your X509 certificate file and to a directory
+filled with trusted certificates::
+
+  [commitsigs]
+  scheme = openssl
+  openssl.certificate = my-cert.pem
+  openssl.capath = trusted-certificates
+
+You must use the ``c_rehash`` program from OpenSSL to prepare the
+directoy with trusted certificates for use by OpenSSL. Otherwise
+OpenSSL wont be able to lookup the certificates.
 """
 
 import os, tempfile, subprocess, binascii, shlex
