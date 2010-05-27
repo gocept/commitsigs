@@ -27,8 +27,8 @@ CONFIG = {
     'gnupg.path': 'gpg',
     'gnupg.flags': [],
     'openssl.path': 'openssl',
-    'openssl.pubkey': '',
-    'openssl.seckey': ''
+    'openssl.capath': '',
+    'openssl.certificate': ''
     }
 
 
@@ -62,27 +62,28 @@ def gnupgverify(msg, sig, quiet=False):
 
 
 def opensslsign(msg):
-    cmd = [CONFIG["openssl.path"], "dgst", "-sign", CONFIG["openssl.seckey"]]
+    cmd = [CONFIG["openssl.path"], "smime", "-sign", "-outform", "pem",
+           "-signer", CONFIG["openssl.certificate"]]
     p = subprocess.Popen(cmd, stdin=subprocess.PIPE, stdout=subprocess.PIPE)
     sig = p.communicate(msg)[0]
-    return binascii.b2a_base64(sig).strip()
+    return sig
 
 
 def opensslverify(msg, sig, quiet=False):
-    sig = binascii.a2b_base64(sig)
     try:
-        fd, filename = tempfile.mkstemp(prefix="hg-", suffix=".sig")
+        fd, filename = tempfile.mkstemp(prefix="hg-", suffix=".msg")
         fp = os.fdopen(fd, 'wb')
-        fp.write(sig)
+        fp.write(msg)
         fp.close()
-        stderr = quiet and subprocess.PIPE or None
 
-        cmd = [CONFIG["openssl.path"], "dgst",
-               "-verify", CONFIG["openssl.pubkey"], "-signature", filename]
+        cmd = [CONFIG["openssl.path"], "smime",
+               "-verify", "-CApath", CONFIG["openssl.capath"],
+               "-inform", "pem", "-content", filename]
         p = subprocess.Popen(cmd, stdin=subprocess.PIPE,
-                             stdout=subprocess.PIPE, stderr=stderr)
-        out, err = p.communicate(msg)
-        return out.strip() == "Verified OK"
+                             stdout=subprocess.PIPE,
+                             stderr=subprocess.PIPE)
+        out, err = p.communicate(sig)
+        return err.strip() == "Verification successful"
     finally:
         try:
             os.unlink(filename)

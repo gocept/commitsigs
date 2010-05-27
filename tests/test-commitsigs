@@ -35,8 +35,8 @@ hgverifysigs
 cat >> $HGRCPATH <<EOF
 [commitsigs]
 scheme = openssl
-openssl.pubkey = $TESTDIR/openssl/alice.pub.pem
-openssl.seckey = $TESTDIR/openssl/alice.sec.pem
+openssl.certificate = $TESTDIR/openssl/alice.pem
+openssl.capath = $TESTDIR/openssl
 EOF
 
 echo "!" >> a.txt
