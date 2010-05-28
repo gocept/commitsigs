@@ -54,7 +54,9 @@ EOF
 
 echo "% commit with pretxncommit hook"
 echo "!" >> a.txt
-hg commit --config extensions.commitsigs=! -m "No signature" -d '4000 0'
+hg commit --config extensions.commitsigs=! -m "No signature" -d '4000 0' 2>&1 \
+    | sed 's|:[0-9a-f]\+:|:XXXXXXXXXXXX:|'
+
 
 cat >> $HGRCPATH <<EOF
 [commitsigs]
