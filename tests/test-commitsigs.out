@@ -16,5 +16,11 @@ error: pretxncommit hook failed: could not verify all new changesets
 transaction abort!
 rollback completed
 abort: could not verify all new changesets
+% push with pretxnchangegroup hook
+3:XXXXXXXXXXXX: ** no signature
+error: pretxnchangegroup hook failed: could not verify all new changesets
+transaction abort!
+rollback completed
+abort: could not verify all new changesets
 % unknown scheme
 abort: unknown signature scheme: x
