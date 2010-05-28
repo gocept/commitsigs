@@ -206,7 +206,7 @@ def hook(ui, repo, node, **kwargs):
     """
     ctx = repo[node]
     if verifysigs(ui, repo, "%s:" % node) > 0:
-        raise error.Abort(_("could not verify all changeset"))
+        raise error.Abort(_("could not verify all new changesets"))
 
 sigschemes = {'gnupg': (gnupgsign, gnupgverify),
               'openssl': (opensslsign, opensslverify)}
