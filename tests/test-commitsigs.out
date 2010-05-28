@@ -10,5 +10,11 @@
 0:XXXXXXXXXXXX: ** no signature
 1:XXXXXXXXXXXX: good gnupg signature
 2:XXXXXXXXXXXX: good openssl signature
+% commit with pretxncommit hook
+3:40cc591592ef: ** no signature
+error: pretxncommit hook failed: could not verify all new changesets
+transaction abort!
+rollback completed
+abort: could not verify all new changesets
 % unknown scheme
 abort: unknown signature scheme: x

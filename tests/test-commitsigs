@@ -9,7 +9,8 @@ hgverifysigs () {
     rm output
 }
 
-hg init
+hg init repo
+cd repo
 echo "Hello" > a.txt
 hg add a.txt
 echo "% Commit with no signature"
@@ -44,6 +45,16 @@ echo "% Commit with OpenSSL signature"
 hg commit -m "OpenSSL" -d '3000 0'
 
 hgverifysigs
+
+cat >> .hg/hgrc <<EOF
+[hooks]
+pretxncommit = python:$TESTDIR/../commitsigs.py:hook
+pretxnchangegroup = python:$TESTDIR/../commitsigs.py:hook
+EOF
+
+echo "% commit with pretxncommit hook"
+echo "!" >> a.txt
+hg commit --config extensions.commitsigs=! -m "No signature" -d '4000 0'
 
 cat >> $HGRCPATH <<EOF
 [commitsigs]
