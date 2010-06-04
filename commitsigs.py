@@ -152,11 +152,11 @@ def ctxhash(ctx):
     return chash(manifest, files, desc, p1, p2, user, date, extra)
 
 
-def verifysigs(ui, repo, *revrange):
+def verifysigs(ui, repo, *revrange, **opts):
     """verify manifest signatures
 
-    Verify the revision range specified or all changesets. The return
-    code is one of:
+    Verify repository heads, the revision range specified or all
+    changesets. The return code is one of:
 
     - 0 if all changesets had valid signatures
     - 1 if there were a changeset without a signature
@@ -165,7 +165,9 @@ def verifysigs(ui, repo, *revrange):
 
     The final return code is the highest of the above.
     """
-    if not revrange:
+    if opts.get('only_heads'):
+        revs = repo.heads()
+    elif not revrange:
         revs = xrange(len(repo))
     else:
         revs = cmdutil.revrange(repo, revrange)
@@ -197,7 +199,7 @@ def verifysigs(ui, repo, *revrange):
     return retcode
 
 
-def hook(ui, repo, node, **kwargs):
+def verifyallhook(ui, repo, node, **kwargs):
     """verify changeset signatures
 
     This hook is suitable for use as a ``pretxnchangegroup`` hook. It
@@ -206,6 +208,17 @@ def hook(ui, repo, node, **kwargs):
     """
     ctx = repo[node]
     if verifysigs(ui, repo, "%s:" % node) > 0:
+        raise error.Abort(_("could not verify all new changesets"))
+
+def verifyheadshook(ui, repo, node, **kwargs):
+    """verify signatures in repository heads
+
+    This hook is suitable for use as a ``pretxnchangegroup`` hook. It
+    will verify that all heads carry a good signature after push. If
+    one or more changesets lack a good signature, the push is aborted.
+    """
+    ctx = repo[node]
+    if verifysigs(ui, repo, True, "%s:" % node, only_heads=True) > 0:
         raise error.Abort(_("could not verify all new changesets"))
 
 sigschemes = {'gnupg': (gnupgsign, gnupgverify),
@@ -237,5 +250,7 @@ def extsetup():
     extensions.wrapfunction(changelog.changelog, 'add', add)
 
 cmdtable = {
-    "verifysigs": (verifysigs, [], "[REV...]")
+    "verifysigs": (verifysigs,
+                   [('', 'only-heads', None, _('only verify heads'))], 
+                   "[REV...]")
 }

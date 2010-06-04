@@ -1,14 +1,20 @@
 % Commit with no signature
 % hg verifysigs (exit code: 1)
 0:XXXXXXXXXXXX: ** no signature
+% hg verifysigs --only-heads (exit code: 1)
+0:XXXXXXXXXXXX: ** no signature
 % Commit with GnuPG signature
 % hg verifysigs (exit code: 1)
 0:XXXXXXXXXXXX: ** no signature
+1:XXXXXXXXXXXX: good gnupg signature
+% hg verifysigs --only-heads (exit code: 0)
 1:XXXXXXXXXXXX: good gnupg signature
 % Commit with OpenSSL signature
 % hg verifysigs (exit code: 1)
 0:XXXXXXXXXXXX: ** no signature
 1:XXXXXXXXXXXX: good gnupg signature
+2:XXXXXXXXXXXX: good openssl signature
+% hg verifysigs --only-heads (exit code: 0)
 2:XXXXXXXXXXXX: good openssl signature
 % commit with pretxncommit hook
 3:XXXXXXXXXXXX: ** no signature

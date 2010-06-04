@@ -7,6 +7,11 @@ hgverifysigs () {
     echo "% hg verifysigs (exit code: $?)"
     sed 's|:[0-9a-f]\+:|:XXXXXXXXXXXX:|' < output
     rm output
+
+    hg verifysigs --only-heads > output
+    echo "% hg verifysigs --only-heads (exit code: $?)"
+    sed 's|:[0-9a-f]\+:|:XXXXXXXXXXXX:|' < output
+    rm output
 }
 
 hg init repo
@@ -48,8 +53,8 @@ hgverifysigs
 
 cat >> .hg/hgrc <<EOF
 [hooks]
-pretxncommit = python:$TESTDIR/../commitsigs.py:hook
-pretxnchangegroup = python:$TESTDIR/../commitsigs.py:hook
+pretxncommit = python:$TESTDIR/../commitsigs.py:verifyheadshook
+pretxnchangegroup = python:$TESTDIR/../commitsigs.py:verifyallhook
 EOF
 
 echo "% commit with pretxncommit hook"
