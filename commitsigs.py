@@ -90,11 +90,23 @@ def gnupgverify(msg, sig, quiet=False):
 
 
 def opensslsign(msg):
-    cmd = [CONFIG["openssl.path"], "smime", "-sign", "-outform", "pem",
-           "-signer", CONFIG["openssl.certificate"]]
-    p = subprocess.Popen(cmd, stdin=subprocess.PIPE, stdout=subprocess.PIPE)
-    sig = p.communicate(msg)[0]
-    return sig
+    try:
+        fd, filename = tempfile.mkstemp(prefix="hg-", suffix=".msg")
+        fp = os.fdopen(fd, 'wb')
+        fp.write(msg)
+        fp.close()
+
+
+        cmd = [CONFIG["openssl.path"], "smime", "-sign", "-outform", "pem",
+               "-signer", CONFIG["openssl.certificate"], "-in", filename]
+        p = subprocess.Popen(cmd, stdin=subprocess.PIPE, stdout=subprocess.PIPE)
+        sig = p.communicate()[0]
+        return sig
+    finally:
+        try:
+            os.unlink(filename)
+        except OSError:
+            pass
 
 
 def opensslverify(msg, sig, quiet=False):
