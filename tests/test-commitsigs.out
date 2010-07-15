@@ -28,5 +28,14 @@ error: pretxnchangegroup hook failed: could not verify all new changesets
 transaction abort!
 rollback completed
 abort: could not verify all new changesets
+% Commit with trailing whitespace
+% hg verifysigs (exit code: 1)
+0:XXXXXXXXXXXX: ** no signature
+1:XXXXXXXXXXXX: good gnupg signature
+2:XXXXXXXXXXXX: good openssl signature
+3:XXXXXXXXXXXX: ** no signature
+4:XXXXXXXXXXXX: good openssl signature
+% hg verifysigs --only-heads (exit code: 0)
+4:XXXXXXXXXXXX: good openssl signature
 % unknown scheme
 abort: unknown signature scheme: x

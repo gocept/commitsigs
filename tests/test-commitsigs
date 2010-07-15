@@ -71,6 +71,20 @@ hg commit --config extensions.commitsigs=! -m "No signature" -d '5000 0'
 hg push -q 2>&1 | sed 's|:[0-9a-f]\+:|:XXXXXXXXXXXX:|'
 
 
+cat >> logmsg <<EOF
+A long commit message with
+trailing whitespace.
+
+
+
+EOF
+
+echo >> a.txt
+echo "% Commit with trailing whitespace"
+hg commit -l logmsg -d '3500 0'
+
+hgverifysigs
+
 cat >> $HGRCPATH <<EOF
 [commitsigs]
 scheme = x

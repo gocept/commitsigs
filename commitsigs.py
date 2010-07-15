@@ -1,6 +1,6 @@
 # commitsigs.py - sign changesets upon commit
 #
-# Copyright 2009 Matt Mackall <mpm@selenic.com> and others
+# Copyright 2009, 2010 Matt Mackall <mpm@selenic.com> and others
 #
 # This software may be used and distributed according to the terms of the
 # GNU General Public License version 2, incorporated herein by reference.
@@ -137,6 +137,10 @@ def chash(manifest, files, desc, p1, p2, user, date, extra):
     if "\n" in user:
         raise error.RevlogError(_("username %s contains a newline")
                                 % repr(user))
+
+    # strip trailing whitespace and leading and trailing empty lines
+    desc = '\n'.join([l.rstrip() for l in desc.splitlines()]).strip('\n')
+
     user, desc = encoding.fromlocal(user), encoding.fromlocal(desc)
 
     if date:
