@@ -1,6 +1,6 @@
 # commitsigs.py - sign changesets upon commit
 #
-# Copyright 2009 Matt Mackall <mpm@selenic.com> and others
+# Copyright 2009, 2010 Matt Mackall <mpm@selenic.com> and others
 #
 # This software may be used and distributed according to the terms of the
 # GNU General Public License version 2, incorporated herein by reference.
@@ -90,11 +90,23 @@ def gnupgverify(msg, sig, quiet=False):
 
 
 def opensslsign(msg):
-    cmd = [CONFIG["openssl.path"], "smime", "-sign", "-outform", "pem",
-           "-signer", CONFIG["openssl.certificate"]]
-    p = subprocess.Popen(cmd, stdin=subprocess.PIPE, stdout=subprocess.PIPE)
-    sig = p.communicate(msg)[0]
-    return sig
+    try:
+        fd, filename = tempfile.mkstemp(prefix="hg-", suffix=".msg")
+        fp = os.fdopen(fd, 'wb')
+        fp.write(msg)
+        fp.close()
+
+
+        cmd = [CONFIG["openssl.path"], "smime", "-sign", "-outform", "pem",
+               "-signer", CONFIG["openssl.certificate"], "-in", filename]
+        p = subprocess.Popen(cmd, stdin=subprocess.PIPE, stdout=subprocess.PIPE)
+        sig = p.communicate()[0]
+        return sig
+    finally:
+        try:
+            os.unlink(filename)
+        except OSError:
+            pass
 
 
 def opensslverify(msg, sig, quiet=False):
@@ -125,6 +137,10 @@ def chash(manifest, files, desc, p1, p2, user, date, extra):
     if "\n" in user:
         raise error.RevlogError(_("username %s contains a newline")
                                 % repr(user))
+
+    # strip trailing whitespace and leading and trailing empty lines
+    desc = '\n'.join([l.rstrip() for l in desc.splitlines()]).strip('\n')
+
     user, desc = encoding.fromlocal(user), encoding.fromlocal(desc)
 
     if date:
