@@ -28,6 +28,15 @@ options::
   gnupg.path = mygpg
   gnupg.flags = --local-user me
 
+If you're using different GPG keys for different projects, you can configure
+them using a multi-line mapping between key ids and full user-name strings
+(where each key id may appear multiple times):
+
+  [commitsigs]
+  gnupg.keys =
+      ABCDEF12 John Doe <johndoe@example.org>
+      34567890 John Doe (work) <johndoe@example.com>
+
 The ``openssl`` scheme requires a little more configuration. You need
 to specify the path to your X509 certificate file and to a directory
 filled with trusted certificates::
@@ -55,14 +64,19 @@ CONFIG = {
     'scheme': 'gnupg',
     'gnupg.path': 'gpg',
     'gnupg.flags': [],
+    'gnupg.keys': '',
     'openssl.path': 'openssl',
     'openssl.capath': '',
     'openssl.certificate': ''
     }
 
 
-def gnupgsign(msg):
-    cmd = [CONFIG["gnupg.path"], "--detach-sign"] + CONFIG["gnupg.flags"]
+def gnupgsign(msg, user):
+    flags = CONFIG["gnupg.flags"]
+    keyid = CONFIG.get('gnupg.keymap', {}).get(user)
+    if keyid:
+        flags.extend(['--local-user', keyid])
+    cmd = [CONFIG["gnupg.path"], "--detach-sign"] + flags
     p = subprocess.Popen(cmd, stdin=subprocess.PIPE, stdout=subprocess.PIPE)
     sig = p.communicate(msg)[0]
     return binascii.b2a_base64(sig).strip()
@@ -111,7 +125,7 @@ def gnupgverify(msg, sig, quiet=False):
             pass
 
 
-def opensslsign(msg):
+def opensslsign(msg, user):
     try:
         fd, filename = tempfile.mkstemp(prefix="hg-", suffix=".msg")
         fp = os.fdopen(fd, 'wb')
@@ -282,6 +296,13 @@ def uisetup(ui):
     if CONFIG['scheme'] not in sigschemes:
         raise util.Abort(_("unknown signature scheme: %s")
                          % CONFIG['scheme'])
+    gnupg_key_lines = CONFIG.get('gnupg.keys')
+    if gnupg_key_lines:
+        gnupg_key_lines = [
+            line.strip() for line in gnupg_key_lines.splitlines()]
+        CONFIG['gnupg.keymap'] = {
+            username: key for key, username in (
+                line.split(None, 1) for line in gnupg_key_lines if line)}
 
 def extsetup():
 
@@ -290,7 +311,7 @@ def extsetup():
         h = chash(manifest, files, desc, p1, p2, user, date, extra)
         scheme = CONFIG['scheme']
         signfunc = sigschemes[scheme][0]
-        extra['signature'] = "%s:%s" % (scheme, signfunc(hex(h)))
+        extra['signature'] = "%s:%s" % (scheme, signfunc(hex(h), user))
         return orig(self, manifest, files, desc, transaction,
                     p1, p2, user, date, extra)
 
