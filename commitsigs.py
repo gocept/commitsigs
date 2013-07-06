@@ -313,8 +313,29 @@ def verifyheadshook(ui, repo, node, **kwargs):
     if verifysigs(ui, repo, True, "%s:" % node, only_heads=True) > 0:
         raise error.Abort(_("could not verify all new changesets"))
 
+
+def verify_all_warn_hook(ui, repo, node, **kwargs):
+    """verify signatures in repository heads
+
+    This hook is suitable for use as a ``pretxnchangegroup`` hook. It
+    will examine signatures on incoming commits and write out a warning if
+    one or more changesets lack a good signature. Other than that, the
+    operation will be unaffected.
+
+    """
+    stats = get_verification_stats(ui, repo, "%s:" % node, quiet=True)
+    if stats[0] == sum(stats.values()):
+        return
+    out = _('Warning: signature verification issues with incoming commits. ')
+    out += '; '.join(_(VERIFICATION_RESULT_MESSAGES[retcode]) % count
+                     for retcode, count in sorted(stats.items())[1:]
+                     if count)
+    ui.write(out + '\n')
+
+
 sigschemes = {'gnupg': (gnupgsign, gnupgverify),
               'openssl': (opensslsign, opensslverify)}
+
 
 def uisetup(ui):
     for key in CONFIG:
@@ -334,6 +355,8 @@ def uisetup(ui):
         CONFIG['gnupg.keymap'] = {
             username: key for key, username in (
                 line.split(None, 1) for line in gnupg_key_lines if line)}
+    ui.setconfig('hooks', 'changegroup', verify_all_warn_hook)
+
 
 def extsetup():
 
@@ -347,6 +370,7 @@ def extsetup():
                     p1, p2, user, date, extra)
 
     extensions.wrapfunction(changelog.changelog, 'add', add)
+
 
 cmdtable = {
     "verifysigs": (verifysigs,
