@@ -214,18 +214,19 @@ VERIFICATION_RESULT_MESSAGES = {
 }
 
 
-def verifysigs(ui, repo, *revrange, **opts):
+def get_verification_stats(ui, repo, *revrange, **opts):
     """verify manifest signatures
 
     Verify repository heads, the revision range specified or all
-    changesets. The return code is one of:
+    changesets. Each verification's result code is one of:
 
     - 0 if all changesets had valid signatures
     - 1 if there were a changeset without a signature
     - 2 if an exception was raised while verifying a changeset
     - 3 if there were a changeset with a bad signature
 
-    The final return code is the highest of the above.
+    The return value is the stats of all verification results.
+
     """
     if opts.get('only_heads'):
         revs = repo.heads()
@@ -266,9 +267,23 @@ def verifysigs(ui, repo, *revrange, **opts):
                     % (scheme, e)
                 retcode = 2
         stats[retcode] += 1
-        ui.write("%d:%s: %s\n" % (ctx.rev(), ctx, msg))
-    if len(revs) > 1:
-        ui.write(_('\nchecked %s commits:\n') % len(revs))
+        if not opts.get('quiet'):
+            ui.write("%d:%s: %s\n" % (ctx.rev(), ctx, msg))
+    return stats
+
+
+def verifysigs(ui, repo, *revrange, **opts):
+    """verify manifest signatures
+
+    Verify repository heads, the revision range specified or all
+    changesets. The return code is the highest of the codes occurring in the
+    verification stats.
+
+    """
+    stats = get_verification_stats(ui, repo, *revrange, **opts)
+    count_revs = sum(stats.values())
+    if count_revs > 1:
+        ui.write(_('\nchecked %s commits:\n') % count_revs)
         for retcode, count in sorted(stats.items()):
             if count:
                 ui.write('  %s\n' %
