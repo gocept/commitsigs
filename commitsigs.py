@@ -44,7 +44,7 @@ OpenSSL wont be able to lookup the certificates.
 
 import os, tempfile, subprocess, binascii, shlex
 
-from mercurial import (util, cmdutil, extensions, revlog, error,
+from mercurial import (util, scmutil, extensions, revlog, error,
                        encoding, changelog)
 from mercurial.node import short, hex, nullid
 from mercurial.i18n import _
@@ -186,7 +186,7 @@ def verifysigs(ui, repo, *revrange, **opts):
     elif not revrange:
         revs = xrange(len(repo))
     else:
-        revs = cmdutil.revrange(repo, revrange)
+        revs = scmutil.revrange(repo, revrange)
 
     retcode = 0
     for rev in revs:
