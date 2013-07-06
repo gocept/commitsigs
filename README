@@ -19,15 +19,15 @@ Works with Mercurial version 1.3 or later.
 Sponsoring
 ----------
 
-This extension was written by `aragost Trifork`_. Feel free to contact
-`aragost Trifork`_ to discuss any further improvements to the
-extension.
+This extension was originally written by `aragost Trifork`_ and forked by
+`gocept`_ in 2013.
 
 Contact
 -------
 
-Martin Geisler <mg@aragost.com>
+Thomas Lotze <tl@gocept.com>
 
 .. _GnuPG: http://gnupg.org/
 .. _OpenSSL: http://openssl.org/
 .. _aragost Trifork: http://aragost.com/mercurial/
+.. _gocept: http://gocept.com/
