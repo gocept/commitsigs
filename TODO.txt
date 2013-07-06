@@ -1,10 +1,19 @@
+- changegroup hook to alert about verification problems after pulling
+
 - validate upon signing that the user name/address matches the key
 
 - report upon verification if the signature identity/address/date differs from
   the commit
 
+- try to integrate better with mercurial's own signing mechanism (for example,
+  re-use the sigcheck command)
+
 - find a means of signing commits after the fact and recognising such
   signatures upon verification (sign in place, use mercurial's native signing
   mechanism, implement a micro-protocol on top of commitsigs's mechanism, ...)
+
+- offer a tool to re-validate bad signatures (including old signatures by keys
+  now expired); consider a commit signed if it carries at least one good
+  signature
 
 - add tests
