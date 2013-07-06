@@ -260,11 +260,15 @@ def verifysigs(ui, repo, *revrange, **opts):
         stats[retcode] += 1
         ui.write("%d:%s: %s\n" % (ctx.rev(), ctx, msg))
     if len(revs) > 1:
-        ui.write(_('\nchecked %s commits:\n'
-                   '  %s good signatures\n  %s unsigned commits\n'
-                   '  %s errors while checking\n  %s bad signatures\n') %
-                 ((len(revs),) +
-                  tuple(count for retcode, count in sorted(stats.items()))))
+        ui.write(_('\nchecked %s commits:\n') % len(revs))
+        for (retcode, count), line in zip(
+            sorted(stats.items()),
+            ('  %s good signatures\n',
+             '  %s unsigned commits\n',
+             '  %s errors while checking\n',
+             '  %s bad signatures\n')):
+            if count:
+                ui.write(_(line) % count)
     return max(retcode for retcode, count in stats.items() if count)
 
 
