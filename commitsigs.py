@@ -226,15 +226,16 @@ def verifysigs(ui, repo, *revrange, **opts):
     else:
         revs = scmutil.revrange(repo, revrange)
 
-    retcode = 0
+    stats = dict.fromkeys(range(4), 0)
     for rev in revs:
+        retcode = 0
         ctx = repo[rev]
         h = ctxhash(ctx)
         extra = ctx.extra()
         sig = extra.get('signature')
         if not sig:
             msg = _("** no signature")
-            retcode = max(retcode, 1)
+            retcode = 1
         else:
             ui.debug(_("signature: %s\n") % sig)
             try:
@@ -251,13 +252,20 @@ def verifysigs(ui, repo, *revrange, **opts):
                         ui.note(details + '\n')
                 else:
                     msg = _("** bad %s signature on %s") % (scheme, short(h))
-                    retcode = max(retcode, 3)
+                    retcode = 3
             except Exception, e:
                 msg = _("** exception while verifying %s signature: %s") \
                     % (scheme, e)
-                retcode = max(retcode, 2)
+                retcode = 2
+        stats[retcode] += 1
         ui.write("%d:%s: %s\n" % (ctx.rev(), ctx, msg))
-    return retcode
+    if len(revs) > 1:
+        ui.write(_('\nchecked %s commits:\n'
+                   '  %s good signatures\n  %s unsigned commits\n'
+                   '  %s errors while checking\n  %s bad signatures\n') %
+                 ((len(revs),) +
+                  tuple(count for retcode, count in sorted(stats.items()))))
+    return max(retcode for retcode, count in stats.items() if count)
 
 
 def verifyallhook(ui, repo, node, **kwargs):
