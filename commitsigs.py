@@ -42,6 +42,7 @@ directoy with trusted certificates for use by OpenSSL. Otherwise
 OpenSSL wont be able to lookup the certificates.
 """
 
+import datetime
 import os, tempfile, subprocess, binascii, shlex
 
 from mercurial import (util, scmutil, extensions, revlog, error,
@@ -81,7 +82,28 @@ def gnupgverify(msg, sig, quiet=False):
         p = subprocess.Popen(cmd, stdin=subprocess.PIPE,
                              stdout=subprocess.PIPE, stderr=stderr)
         out, err = p.communicate(msg)
-        return 'GOODSIG' in out
+        success = 'GOODSIG' in out
+        result = dict(
+            success=success,
+            )
+        if success:
+            lines = out.splitlines()
+            details = []
+            for line in lines:
+                if 'SIG_ID' in line:
+                    timestamp = datetime.datetime.fromtimestamp(
+                        int(line.split()[-1]))
+                    details.append(_('signature timestamp: %s') %
+                                   timestamp.isoformat())
+                if 'GOODSIG' in line:
+                    keyinfo = line.split('GOODSIG', 1)[1].strip()
+                    keyid, identity = keyinfo.split(None, 1)
+                    details.append(_('pgp key id: %s') % keyid)
+            result.update(
+                identity=identity,
+                details='; '.join(details),
+                )
+        return result
     finally:
         try:
             os.unlink(filename)
@@ -123,7 +145,9 @@ def opensslverify(msg, sig, quiet=False):
                              stdout=subprocess.PIPE,
                              stderr=subprocess.PIPE)
         out, err = p.communicate(sig)
-        return err.strip() == "Verification successful"
+        return dict(
+            success=err.strip() == "Verification successful",
+            )
     finally:
         try:
             os.unlink(filename)
@@ -202,8 +226,15 @@ def verifysigs(ui, repo, *revrange, **opts):
             try:
                 scheme, sig = sig.split(":", 1)
                 verifyfunc = sigschemes[scheme][1]
-                if verifyfunc(hex(h), sig, quiet=True):
+                result = verifyfunc(hex(h), sig, quiet=True)
+                if result['success']:
                     msg = _("good %s signature") % scheme
+                    identity = result.get('identity')
+                    if identity:
+                        msg += _(' by %s') % identity
+                    details = result.get('details')
+                    if details:
+                        ui.note(details + '\n')
                 else:
                     msg = _("** bad %s signature on %s") % (scheme, short(h))
                     retcode = max(retcode, 3)
