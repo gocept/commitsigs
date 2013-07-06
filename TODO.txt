@@ -3,8 +3,6 @@
 - report upon verification if the signature identity/address/date differs from
   the commit
 
-- output a summary line when verifying multiple signatures
-
 - find a means of signing commits after the fact and recognising such
   signatures upon verification (sign in place, use mercurial's native signing
   mechanism, implement a micro-protocol on top of commitsigs's mechanism, ...)
