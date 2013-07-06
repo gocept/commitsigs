@@ -206,6 +206,14 @@ def ctxhash(ctx):
     return chash(manifest, files, desc, p1, p2, user, date, extra)
 
 
+VERIFICATION_RESULT_MESSAGES = {
+    0: '%s good signatures',
+    1: '%s unsigned commits',
+    2: '%s errors while checking',
+    3: '%s bad signatures',
+}
+
+
 def verifysigs(ui, repo, *revrange, **opts):
     """verify manifest signatures
 
@@ -261,14 +269,10 @@ def verifysigs(ui, repo, *revrange, **opts):
         ui.write("%d:%s: %s\n" % (ctx.rev(), ctx, msg))
     if len(revs) > 1:
         ui.write(_('\nchecked %s commits:\n') % len(revs))
-        for (retcode, count), line in zip(
-            sorted(stats.items()),
-            ('  %s good signatures\n',
-             '  %s unsigned commits\n',
-             '  %s errors while checking\n',
-             '  %s bad signatures\n')):
+        for retcode, count in sorted(stats.items()):
             if count:
-                ui.write(_(line) % count)
+                ui.write('  %s\n' %
+                         (_(VERIFICATION_RESULT_MESSAGES[retcode]) % count))
     return max(retcode for retcode, count in stats.items() if count)
 
 
