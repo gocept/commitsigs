@@ -61,6 +61,11 @@ filled with trusted certificates::
 You must use the ``c_rehash`` program from OpenSSL to prepare the
 directoy with trusted certificates for use by OpenSSL. Otherwise
 OpenSSL wont be able to lookup the certificates.
+
+The verifysigs command lets you verify the signatures of some or all commits.
+If a good signature is found, it tells you the belonging identity and warns
+you if it differs from the committing user without being a known alias.
+
 """
 
 import datetime
@@ -254,6 +259,7 @@ def get_verification_stats(ui, repo, *revrange, **opts):
         revs = scmutil.revrange(repo, revrange)
 
     stats = dict.fromkeys(range(4), 0)
+    user_aliases = CONFIG.get('useraliases', {})
     for rev in revs:
         retcode = 0
         ctx = repo[rev]
@@ -274,6 +280,9 @@ def get_verification_stats(ui, repo, *revrange, **opts):
                     identity = result.get('identity')
                     if identity:
                         msg += _(' by %s') % identity
+                        user = ctx.user()
+                        if identity not in user_aliases.get(user, (user,)):
+                            msg += _(' but committed by %s') % user
                     details = result.get('details')
                     if details:
                         ui.note(details + '\n')
