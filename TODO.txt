@@ -1,5 +1,3 @@
-- validate upon signing that the user name/address matches the key
-
 - report upon verification if the signature identity/address/date differs from
   the commit
 

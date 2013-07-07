@@ -37,6 +37,18 @@ them using a multi-line mapping between key ids and full user-name strings
       ABCDEF12 John Doe <johndoe@example.org>
       34567890 John Doe (work) <johndoe@example.com>
 
+The extension allows only commits where the user name string matches the GPG
+key's identity. If it is intentional that the two aren't exactly the same,
+sets of aliases may be listed in a file named .hguseraliases sitting in the
+repository root. That file contains identity strings, each on their own line,
+with blocks of aliases for each identity separated by one or more blank lines:
+
+  John Doe <johndoe@example.org>
+  John Doe (feeling cool) <johndoe@example.org>
+
+  Jane Doe <janedoe@example.org>
+  Jane Doe (born Smith) <janesmith@example.org>
+
 The ``openssl`` scheme requires a little more configuration. You need
 to specify the path to your X509 certificate file and to a directory
 filled with trusted certificates::
@@ -79,7 +91,13 @@ def gnupgsign(msg, user):
     cmd = [CONFIG["gnupg.path"], "--detach-sign"] + flags
     p = subprocess.Popen(cmd, stdin=subprocess.PIPE, stdout=subprocess.PIPE)
     sig = p.communicate(msg)[0]
-    return binascii.b2a_base64(sig).strip()
+    sig_encoded = binascii.b2a_base64(sig).strip()
+    gpg_id = gnupgverify(msg, sig_encoded, quiet=True).get('identity')
+    if gpg_id not in CONFIG['useraliases'].get(user, (user,)):
+        raise error.Abort(
+            _('Signature identity %r does not match committing user %r; '
+              'check the .hguseraliases file.') % (gpg_id, user))
+    return sig_encoded
 
 
 def gnupgverify(msg, sig, quiet=False):
@@ -370,6 +388,24 @@ def extsetup():
                     p1, p2, user, date, extra)
 
     extensions.wrapfunction(changelog.changelog, 'add', add)
+
+
+def reposetup(ui, repo):
+    if not hasattr(repo, 'root'):
+        return
+    CONFIG['useraliases'] = user_aliases = {}
+    user_alias_path = repo.wjoin('.hguseraliases')
+    if not os.path.isfile(user_alias_path):
+        return
+    user_ids = set()
+    with open(user_alias_path) as user_alias_file:
+        for line in user_alias_file:
+            line = line.strip()
+            if line:
+                user_ids.add(line)
+                user_aliases[line] = user_ids
+            else:
+                user_ids = set()
 
 
 cmdtable = {
