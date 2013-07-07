@@ -1,6 +1,3 @@
-- report upon verification if the signature identity/address/date differs from
-  the commit
-
 - try to integrate better with mercurial's own signing mechanism (for example,
   re-use the sigcheck command)
 
